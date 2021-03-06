@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {filterImageFromURL, deleteLocalFiles, isURL} from './util/util';
 
 (async () => {
 
@@ -30,6 +30,37 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   /**************************************************************************** */
 
   //! END @TODO1
+  // endpoint to filter an image from a public url.
+  app.get( "/filteredimage/", async (req, res) => {
+    
+    // 1. validate the image_url query
+    let { image_url } = req.query;
+
+    if ( !image_url ) {
+      return res.status(400)
+                .send(`An image url is required`);
+    }
+
+    // check if given image_url is a valid url in itself.
+    let isImage:boolean;
+    isImage = await isURL(image_url);
+    if(! isImage ){
+      return res.status(400)
+                .send(`Provide a valid url of an image`);
+    }
+
+    // // 2. call filterImageFromURL(image_url) to filter the image
+    let filteredpath: string;
+    try{
+        filteredpath = await filterImageFromURL(image_url);
+    }catch(e){
+        return res.status(500).send(e);
+    }
+    //    3. send the resulting file in the response
+    //    4. deletes any files on the server on finish of the response
+    res.status(200).sendFile(filteredpath, () => {deleteLocalFiles([filteredpath]);})
+
+  });
   
   // Root Endpoint
   // Displays a simple message to the user

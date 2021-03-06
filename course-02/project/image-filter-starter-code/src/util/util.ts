@@ -9,7 +9,8 @@ import Jimp = require('jimp');
 // RETURNS
 //    an absolute path to a filtered image locally saved file
 export async function filterImageFromURL(inputURL: string): Promise<string>{
-    return new Promise( async resolve => {
+    return new Promise( async (resolve,reject) => {
+        try {
         const photo = await Jimp.read(inputURL);
         const outpath = '/tmp/filtered.'+Math.floor(Math.random() * 2000)+'.jpg';
         await photo
@@ -19,6 +20,9 @@ export async function filterImageFromURL(inputURL: string): Promise<string>{
         .write(__dirname+outpath, (img)=>{
             resolve(__dirname+outpath);
         });
+        }catch (error) {
+            reject("Could not read image.");
+        }
     });
 }
 
@@ -31,4 +35,10 @@ export async function deleteLocalFiles(files:Array<string>){
     for( let file of files) {
         fs.unlinkSync(file);
     }
+}
+
+// check if valid url
+export async function isURL(inputURL:string) {
+    var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+    return regexp.test(inputURL);
 }
